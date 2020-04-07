@@ -1,17 +1,7 @@
-
 import java.awt.Graphics;
+import java.util.ArrayList;
 import java.util.List;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/**
- *
- * @author victoralonso
- */
 public class Snake {
     
     private Direction direction;
@@ -20,7 +10,11 @@ public class Snake {
     
     
     public Snake(int row, int col, int size) { // Initial position of the head of the snake and number of inital nodes
-        // Finish this method
+        body = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            Node node = new Node(row, col - i);
+            body.add(node);
+        }
     }
     
     public boolean canMove(int row, int col) {
@@ -33,9 +27,6 @@ public class Snake {
     }
     
     public void move() {
-        // Finish this method
+        
     }
-    
-    
-    
 }
