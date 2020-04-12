@@ -1,3 +1,4 @@
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +23,12 @@ public class Snake {
         return true;
     }
     
+    public List<Node> getBody() {
+        return body;
+    }
+    
     public void paint(Graphics g, int squareWidth, int squareHeight) {
-        // Finish this method. Call Util.drawSquare()
+
     }
     
     public void move() {
