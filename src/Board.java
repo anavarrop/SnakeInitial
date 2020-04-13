@@ -37,7 +37,7 @@ class MyRunnable implements Runnable {
                     } else {
                         snake.setEat(false);
                     }
-                    snake.move(0, -1, board);
+                    if (!snake.move(0, -1, board)) {Board.setGameOver();};
                     break;
                 case RIGHT:
                     if (!snake.isEat()) {
@@ -45,7 +45,7 @@ class MyRunnable implements Runnable {
                     } else {
                         snake.setEat(false);
                     }
-                    snake.move(0, +1, board);
+                    if (!snake.move(0, +1, board)) {Board.setGameOver();};
                     break;
                 case UP:
                     if (!snake.isEat()) {
@@ -53,7 +53,7 @@ class MyRunnable implements Runnable {
                     } else {
                         snake.setEat(false);
                     }
-                    snake.move(-1, 0, board);
+                    if (!snake.move(-1, 0, board)) {Board.setGameOver();};
                     break;
                 case DOWN:
                     if (!snake.isEat()) {
@@ -61,7 +61,7 @@ class MyRunnable implements Runnable {
                     } else {
                         snake.setEat(false);
                     }
-                    snake.move(+1, 0,board);
+                    if (!snake.move(+1, 0,board)) {Board.setGameOver();};
                     break;
             }
             b.repaint();
@@ -83,19 +83,19 @@ public class Board extends JPanel implements ActionListener {
         @Override
         public void keyPressed(KeyEvent e) {
             switch (e.getKeyCode()) {
-                case KeyEvent.VK_LEFT:
+                case KeyEvent.VK_LEFT: case KeyEvent.VK_A:
                     if (lastDirection == Direction.RIGHT) {break;}
                     direction = Direction.LEFT;
                     break;
-                case KeyEvent.VK_RIGHT:
+                case KeyEvent.VK_RIGHT: case KeyEvent.VK_D:
                     if (lastDirection == Direction.LEFT) {break;}
                     direction = Direction.RIGHT;
                     break;
-                case KeyEvent.VK_UP:
+                case KeyEvent.VK_UP: case KeyEvent.VK_W:
                     if (lastDirection == Direction.DOWN) {break;}
                     direction = Direction.UP;
                     break;
-                case KeyEvent.VK_DOWN:
+                case KeyEvent.VK_DOWN: case KeyEvent.VK_S:
                     if (lastDirection == Direction.UP) {break;}
                     direction = Direction.DOWN;
                     break;
@@ -117,6 +117,7 @@ public class Board extends JPanel implements ActionListener {
     private Direction lastDirection;
     private Direction direction;
     private MyRunnable runnable;
+    private static boolean gameOver;
     Timer timer = new Timer();
     TimerTask timerTask = new TimerTask() {
         public void run() {
@@ -127,12 +128,13 @@ public class Board extends JPanel implements ActionListener {
     };
     
     private void myInit() {
+        gameOver = false;
         lastDirection = direction;
         food = new Food(fill(), board);
         timer.scheduleAtFixedRate(timerTask, 0, 1000);
         setFocusable(true);
         this.addKeyListener(new MyKeyAdapter());
-        snake = new Snake(4,4,3);
+        snake = new Snake(4,4,3, scoreBoard1);
         DeltaTime = 200;
         direction = Direction.RIGHT;
         runnable = new MyRunnable(this);
@@ -153,7 +155,6 @@ public class Board extends JPanel implements ActionListener {
                 board[x][y] = 0;
             }
         }
-        
         initComponents();
         myInit();
     }
@@ -182,7 +183,6 @@ public class Board extends JPanel implements ActionListener {
                 }
             }
         }
-        
         return position;
     }
     
@@ -190,8 +190,13 @@ public class Board extends JPanel implements ActionListener {
         return false;
     }
     
+    public static void setGameOver() {
+        gameOver = true;
+    }
+    
     public void gameOver() {
-        // Finish this method
+        System.exit(0);
+        return;
     }
     
     @Override 
@@ -202,6 +207,10 @@ public class Board extends JPanel implements ActionListener {
     }
     
     private void paintSnake(Graphics2D g2d) {
+        if (gameOver) {
+            pause();
+            gameOver();
+        }
         lastDirection = direction;
         boolean haveFood = false;
         for (int x = 0; x < numRows; x++) {
@@ -221,18 +230,14 @@ public class Board extends JPanel implements ActionListener {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
-        );
+        scoreBoard1 = new ScoreBoard();
+
+        setBackground(new java.awt.Color(204, 255, 255));
+        setLayout(new java.awt.BorderLayout());
+        add(scoreBoard1, java.awt.BorderLayout.PAGE_END);
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private ScoreBoard scoreBoard1;
     // End of variables declaration//GEN-END:variables
 
     @Override

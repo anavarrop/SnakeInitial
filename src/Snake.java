@@ -6,12 +6,15 @@ public class Snake {
     private List<Node> body;
     private int remainingNodesToCreate;
     private boolean eat;
+    private ScoreBoard scoreBoard;
     
-    public Snake(int row, int col, int size) {
+    public Snake(int row, int col, int size, ScoreBoard scoreBoard) {
         body = new ArrayList<>();
         remainingNodesToCreate = size;
         createRemainingNodes(row, col);
         eat = false;
+        this.scoreBoard = scoreBoard;
+        this.scoreBoard.incrementScore(0);
     }
     
     private void createRemainingNodes(int row, int col) {
@@ -38,9 +41,10 @@ public class Snake {
         node.setNext(body.get(body.size() - 1));
         body.add(node);
         eat = true;
+        scoreBoard.incrementScore(1);
     }
     
-    public void move(int row, int col, int[][] board) {
+    public boolean move(int row, int col, int[][] board) {
         for (int i = body.size() - 1; i >= 0; i--) {
             Node n = body.get(i);
             if (n.getNext()== null) {
@@ -48,6 +52,8 @@ public class Snake {
                 n.moveCol(col, board[0].length - 1);
                 if (board[n.getRow()][n.getCol()] == 2) {
                     grew(n.getRow(), n.getCol());
+                } else if (board[n.getRow()][n.getCol()] != 0) {
+                    return false;
                 }
                 board[n.getRow()][n.getCol()] = 1;
                 
@@ -55,6 +61,7 @@ public class Snake {
                 n.moveToNext();
             }
         }
+        return true;
     }    
 
     public boolean isEat() {
