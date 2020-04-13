@@ -4,20 +4,19 @@ import javax.swing.JFrame;
 
 public class Game extends JFrame {
 
+    static Board b;
     public Game() {
-        Board b = new Board(25, 25);
+        b = new Board(25, 25);
         add(b);
-        //b.start();
         
-        setSize(500, 500);
+        setSize(642, 640);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
     
         public static void main(String[] args) {
-
         Game game = new Game();
         game.setLocationRelativeTo(null);
         game.setVisible(true);
-
-    } 
+        b.run();
+    }
 }

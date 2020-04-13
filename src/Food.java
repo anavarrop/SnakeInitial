@@ -1,18 +1,22 @@
-import java.awt.Graphics;
+import java.util.List;
 
 public class Food {
     private Node position;
-    private boolean isSpecial;
-    
-    public Food(Snake snake) { 
-        // We pass Snake to the constructor because if the randomnly generated food
-        // falls on the Snake you have to create another position for the food
-        
+    private int[][] board;
+    private boolean haveFood;
+
+    public Food(List<Node> position, int[][] b) { 
+        board = b;
+        this.position = position.get((int)(Math.random() * (position.size() - 1)));
+        board[this.position.getRow()][this.position.getCol()] = 2;
+        haveFood = true;
     }
-    
-    public void paint(Graphics g, int squareWidth, int squareHeight) {
-        // Finish this method. Call Util.drawSquare()
+
+    public boolean isHaveFood() {
+        return haveFood;
     }
-    
-    // Create all the methods you need here
+
+    public void setHaveFood(boolean haveFood) {
+        this.haveFood = haveFood;
+    }
 }
