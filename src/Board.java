@@ -27,23 +27,40 @@ class MyRunnable implements Runnable {
     @Override
     public void run() {
         while (!pause) {
+            Node n;
             List<Node> body = b.getSnake().getBody(); 
             try {Thread.sleep(Board.DeltaTime);} catch (InterruptedException ex) {}
             switch(b.getDirection()) {
                 case LEFT:
-                    board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
+                    if (!snake.isEat()) {
+                        board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
+                    } else {
+                        snake.setEat(false);
+                    }
                     snake.move(0, -1, board);
                     break;
                 case RIGHT:
-                    board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
+                    if (!snake.isEat()) {
+                        board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
+                    } else {
+                        snake.setEat(false);
+                    }
                     snake.move(0, +1, board);
                     break;
                 case UP:
-                    board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
+                    if (!snake.isEat()) {
+                        board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
+                    } else {
+                        snake.setEat(false);
+                    }
                     snake.move(-1, 0, board);
                     break;
-                default:
-                    board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
+                case DOWN:
+                    if (!snake.isEat()) {
+                        board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
+                    } else {
+                        snake.setEat(false);
+                    }
                     snake.move(+1, 0,board);
                     break;
             }
@@ -61,25 +78,25 @@ class MyRunnable implements Runnable {
 }
 
 public class Board extends JPanel implements ActionListener {
-    
     class MyKeyAdapter extends KeyAdapter {
+        
         @Override
         public void keyPressed(KeyEvent e) {
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT:
-                    if (direction == Direction.RIGHT) {break;}
+                    if (lastDirection == Direction.RIGHT) {break;}
                     direction = Direction.LEFT;
                     break;
                 case KeyEvent.VK_RIGHT:
-                    if (direction == Direction.LEFT) {break;}
+                    if (lastDirection == Direction.LEFT) {break;}
                     direction = Direction.RIGHT;
                     break;
                 case KeyEvent.VK_UP:
-                    if (direction == Direction.DOWN) {break;}
+                    if (lastDirection == Direction.DOWN) {break;}
                     direction = Direction.UP;
                     break;
                 case KeyEvent.VK_DOWN:
-                    if (direction == Direction.UP) {break;}
+                    if (lastDirection == Direction.UP) {break;}
                     direction = Direction.DOWN;
                     break;
                 case KeyEvent.VK_ESCAPE:
@@ -97,6 +114,7 @@ public class Board extends JPanel implements ActionListener {
     private Food food;
     private Food specialFood;
     public static int DeltaTime;
+    private Direction lastDirection;
     private Direction direction;
     private MyRunnable runnable;
     Timer timer = new Timer();
@@ -109,12 +127,13 @@ public class Board extends JPanel implements ActionListener {
     };
     
     private void myInit() {
+        lastDirection = direction;
         food = new Food(fill(), board);
         timer.scheduleAtFixedRate(timerTask, 0, 1000);
         setFocusable(true);
         this.addKeyListener(new MyKeyAdapter());
         snake = new Snake(4,4,3);
-        DeltaTime = 500;
+        DeltaTime = 200;
         direction = Direction.RIGHT;
         runnable = new MyRunnable(this);
         
@@ -180,10 +199,10 @@ public class Board extends JPanel implements ActionListener {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         paintSnake(g2d);
-        paintFood(g2d);
     }
     
     private void paintSnake(Graphics2D g2d) {
+        lastDirection = direction;
         boolean haveFood = false;
         for (int x = 0; x < numRows; x++) {
             for (int y = 0; y < numCols; y++) {
@@ -198,10 +217,6 @@ public class Board extends JPanel implements ActionListener {
         food.setHaveFood(haveFood);
     }
     
-    private void paintFood(Graphics2D g2d) {
-        
-    }
-
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {

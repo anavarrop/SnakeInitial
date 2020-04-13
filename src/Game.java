@@ -9,7 +9,7 @@ public class Game extends JFrame {
         b = new Board(25, 25);
         add(b);
         
-        setSize(642, 640);
+        setSize(642, 665);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
     
