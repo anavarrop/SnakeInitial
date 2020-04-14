@@ -81,9 +81,8 @@ public class Snake {
                 } else if (board[n.getRow()][n.getCol()] == 3) {
                     remainingNodesToCreate += 4;
                     score.incrementScore(4);
-                }else if (board[n.getRow()][n.getCol()] != 0) {
-                    return false;
                 }
+                
                 if (remainingNodesToCreate > 0) {
                     grew(row, col);
                 }
