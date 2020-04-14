@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 class MyRunnable implements Runnable {
@@ -16,7 +17,6 @@ class MyRunnable implements Runnable {
     private int[][] board;
     private Snake snake;
     private Board b;
-    private boolean pause = false;
     
     public MyRunnable(Board b) {
         this.b = b;
@@ -26,151 +26,174 @@ class MyRunnable implements Runnable {
     
     @Override
     public void run() {
-        while (!pause) {
-            Node n;
-            List<Node> body = b.getSnake().getBody(); 
+        while (true) {
             try {Thread.sleep(Board.DeltaTime);} catch (InterruptedException ex) {}
-            switch(b.getDirection()) {
+            removeLastNodeIfIsNecessary();
+            
+            switch(snake.getDirection()) {
                 case LEFT:
-                    if (!snake.isEat()) {
-                        board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
-                    } else {
-                        snake.setEat(false);
-                    }
-                    if (!snake.move(0, -1, board)) {Board.setGameOver();};
+                    checkCollision(0, -1);
                     break;
                 case RIGHT:
-                    if (!snake.isEat()) {
-                        board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
-                    } else {
-                        snake.setEat(false);
-                    }
-                    if (!snake.move(0, +1, board)) {Board.setGameOver();};
+                    checkCollision(0, +1);
                     break;
                 case UP:
-                    if (!snake.isEat()) {
-                        board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
-                    } else {
-                        snake.setEat(false);
-                    }
-                    if (!snake.move(-1, 0, board)) {Board.setGameOver();};
+                    checkCollision(-1, 0);
                     break;
                 case DOWN:
-                    if (!snake.isEat()) {
-                        board[body.get(body.size() - 1).getRow()][body.get(body.size() - 1).getCol()] = 0;
-                    } else {
-                        snake.setEat(false);
-                    }
-                    if (!snake.move(+1, 0,board)) {Board.setGameOver();};
+                    checkCollision(+1, 0);
                     break;
             }
             b.repaint();
         }
     }
-
-    public void setPause(boolean pause) {
-        this.pause = pause;
+    
+    private void checkCollision(int incrementeRow, int incrementCol) {
+        if (!snake.move(incrementeRow, incrementCol, board)) {
+            gameOver();
+        }
     }
     
-    public boolean getPause() {
-        return pause;
+    private void removeLastNodeIfIsNecessary() {
+        if (!snake.isEat()) {
+            removeLastNode();
+        } else {
+            snake.setEat(false);
+        }
+    }
+    
+    private void removeLastNode() {
+        board[snake.getLastRow()][snake.getLastCol()] = 0;
+    }
+    
+    private void gameOver() {
+        try {finalize();} catch (Throwable ex) {}
+        b.gameOver();
     }
 }
 
 public class Board extends JPanel implements ActionListener {
+  
     class MyKeyAdapter extends KeyAdapter {
-        
         @Override
         public void keyPressed(KeyEvent e) {
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT: case KeyEvent.VK_A:
-                    if (lastDirection == Direction.RIGHT) {break;}
-                    direction = Direction.LEFT;
+                    checkDirection(Direction.LEFT);
                     break;
                 case KeyEvent.VK_RIGHT: case KeyEvent.VK_D:
-                    if (lastDirection == Direction.LEFT) {break;}
-                    direction = Direction.RIGHT;
+                    checkDirection(Direction.RIGHT);
                     break;
                 case KeyEvent.VK_UP: case KeyEvent.VK_W:
-                    if (lastDirection == Direction.DOWN) {break;}
-                    direction = Direction.UP;
+                    checkDirection(Direction.UP);
                     break;
                 case KeyEvent.VK_DOWN: case KeyEvent.VK_S:
-                    if (lastDirection == Direction.UP) {break;}
-                    direction = Direction.DOWN;
+                    checkDirection(Direction.DOWN);
                     break;
-                case KeyEvent.VK_ESCAPE:
-                    pause();
                 default:
                     break;
             }
         }
+        
+        private void checkDirection(Direction direction) {
+            if (lastDirection != oppositeDirection(direction)) {snake.setDirection(direction);}
+        }
+        
+        private Direction oppositeDirection(Direction direction) {
+            switch (direction) {
+                case LEFT:
+                    return Direction.RIGHT;
+                case RIGHT:
+                    return Direction.LEFT;
+                case UP:
+                    return Direction.DOWN;
+                case DOWN:
+                    return Direction.UP;
+                default:
+                    return Direction.LEFT;
+            }
+        }
     }
+    
+    
     
     private int numRows;
     private int numCols;
     private int[][] board;
+    
     private Snake snake;
+    private Direction lastDirection;
+    
     private Food food;
     private Food specialFood;
-    public static int DeltaTime;
-    private Direction lastDirection;
-    private Direction direction;
-    private MyRunnable runnable;
-    private static boolean gameOver;
-    Timer timer = new Timer();
-    TimerTask timerTask = new TimerTask() {
-        public void run() {
-            if (!food.isHaveFood()) {            
-                food = new Food(fill(), board);
-            }
-        }
-    };
     
-    private void myInit() {
-        gameOver = false;
-        lastDirection = direction;
-        food = new Food(fill(), board);
-        timer.scheduleAtFixedRate(timerTask, 0, 1000);
+    public static int DeltaTime;
+    private MyRunnable runnable;   
+    
+    private Timer timer;
+    private TimerTask timerTask;
+    
+    private Timer timerSpecial;
+    private TimerTask timerTaskSpecial;
+    
+    private boolean firstTime;
+    
+    
+    private void myInit() {   
+        firstTime = true;
+        
+        snake = new Snake(4,4,3, scoreBoard);
+        lastDirection = snake.getDirection();
+        board = snake.create(numRows, numCols);
+        
+        food = new Food(fill(), board, false);
+        
         setFocusable(true);
         this.addKeyListener(new MyKeyAdapter());
-        snake = new Snake(4,4,3, scoreBoard1);
-        DeltaTime = 200;
-        direction = Direction.RIGHT;
-        runnable = new MyRunnable(this);
         
-        List<Node> body = snake.getBody(); 
-        for (Node n : body) {
-            board[n.getRow()][n.getCol()] = 1;
-        }
+        DeltaTime = 200;
+        runnable = new MyRunnable(this); 
+        timer = new Timer();
+        timerTask = new TimerTask() {
+            public void run() {
+                if (!food.isHaveFood()) {            
+                    food = new Food(fill(), board, false);
+                }
+            }
+        };
+        timer.scheduleAtFixedRate(timerTask, 0, 1000);
+        timerSpecial = new Timer();
+        timerTaskSpecial = new TimerTask() {
+            public void run() {
+                if (firstTime || specialFood.timerSpecialFood == 0) {
+                    int r = (int)(Math.random() * (100 - 1) + 1);
+                    if (r > 50 && r < 60){     
+                        firstTime = false;
+                        specialFood = new Food(fill(), board, true);
+                    }
+                } else {
+                    if (specialFood.timerSpecialFood == 11) {
+                        specialFood.timerSpecialFood = 0;
+                        specialFood.desapear();
+                    }
+                    else {specialFood.timerSpecialFood++;}
+                }
+            }
+        };
+        timerSpecial.scheduleAtFixedRate(timerTaskSpecial, 0, 1000);
     }
     
     public Board(int numRows, int numCols) {
         this.numRows = numRows;
         this.numCols = numCols;
-      
-        board = new int[numRows][numCols];
-        for (int x = 0; x < numRows; x++) {
-            for (int y = 0; y < numCols; y++) {
-                board[x][y] = 0;
-            }
-        }
+        
         initComponents();
         myInit();
     }
     
-    public void run() {
+    public void start() {
         runnable = new MyRunnable(this);
         runnable.run();
-    }
-    
-    public void pause() {
-        boolean pause = runnable.getPause();
-        if (!pause) {
-            runnable.setPause(true);
-        } else {
-            run();
-        }
     }
     
     private List<Node> fill() {
@@ -186,17 +209,24 @@ public class Board extends JPanel implements ActionListener {
         return position;
     }
     
-    public boolean colideFood() {
-        return false;
-    }
-    
-    public static void setGameOver() {
-        gameOver = true;
-    }
-    
     public void gameOver() {
-        System.exit(0);
-        return;
+        timer.purge();
+        timerTask.cancel();
+        timerSpecial.purge();
+        timerTaskSpecial.cancel();
+        
+        JOptionPane jpane = new JOptionPane();
+        int a = jpane.showConfirmDialog(this, "¿Quiere hacer otra partida?", "PERDISTE", JOptionPane.INFORMATION_MESSAGE);
+        
+        switch (a) {
+            case JOptionPane.YES_OPTION:
+                myInit();
+                start();
+                break;
+            default:
+                System.exit(0);
+                break;
+        }
     }
     
     @Override 
@@ -207,22 +237,30 @@ public class Board extends JPanel implements ActionListener {
     }
     
     private void paintSnake(Graphics2D g2d) {
-        if (gameOver) {
-            pause();
-            gameOver();
-        }
-        lastDirection = direction;
+        lastDirection = snake.getDirection();
+        
         boolean haveFood = false;
+        boolean haveSpecialFood = false;
         for (int x = 0; x < numRows; x++) {
             for (int y = 0; y < numCols; y++) {
-                if (board[x][y] == 1) {
-                    Util.drawSquare(g2d, x, y, numRows, numCols, Color.yellow);
-                } else if (board[x][y] == 2) {
-                    haveFood = true;
-                    Util.drawSquare(g2d, x, y, numRows, numCols, Color.red);
+                switch (board[x][y]) {
+                    case 1:
+                        Util.drawSquare(g2d, x, y, numRows, numCols, Color.yellow);
+                        break;
+                    case 2:
+                        haveFood = true;
+                        Util.drawSquare(g2d, x, y, numRows, numCols, Color.red);
+                        break;
+                    case 3:
+                        haveSpecialFood = true;
+                        Util.drawSquare(g2d, x, y, numRows, numCols, Color.green);
+                        break;
+                    default:
+                        break;
                 }
             }
         }
+        if (!firstTime && !haveSpecialFood) {specialFood.setTimer(0);}
         food.setHaveFood(haveFood);
     }
     
@@ -231,32 +269,33 @@ public class Board extends JPanel implements ActionListener {
     private void initComponents() {
 
         scoreBoard1 = new ScoreBoard();
+        scoreBoard = new ScoreBoard();
 
         setBackground(new java.awt.Color(204, 255, 255));
         setLayout(new java.awt.BorderLayout());
-        add(scoreBoard1, java.awt.BorderLayout.PAGE_END);
+        add(scoreBoard, java.awt.BorderLayout.PAGE_END);
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private ScoreBoard scoreBoard;
     private ScoreBoard scoreBoard1;
     // End of variables declaration//GEN-END:variables
-
-    @Override
-    public void actionPerformed(ActionEvent ae) {
-    }
-
-    public Direction getDirection() {
-        return direction;
-    }
-
     public int[][] getBoard() {
         return board;
     }
 
     public Node getNode() {
-        return snake.getBody().get(0);
+        return snake.getFirst();
     }
 
     public Snake getSnake() {
         return snake;
+    }
+    
+    public Runnable getRunnable() {
+        return runnable;
+    }
+    
+    @Override
+    public void actionPerformed(ActionEvent ae) {
     }
 }
