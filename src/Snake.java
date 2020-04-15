@@ -74,14 +74,13 @@ public class Snake {
         }
     }
     
-    public boolean move(int row, int col, int[][] board) {
+    public boolean move(int row, int col, Food food, Food specialFood) {
         for (int i = body.size() - 1; i >= 0; i--) {
             Node n = body.get(i);
             if (n.getNext()== null) {
-                moveNode(n, row, col, board.length - 1, board[0].length - 1);
-                if (!collision(board, n)) {return false;}
+                moveNode(n, row, col, 25, 25);
+                if (!collision(food, specialFood)) {return false;}
                 grew(n.getRow(), n.getCol());
-                board[n.getRow()][n.getCol()] = 1;
                 
             } else {
                 n.moveToNext();
@@ -95,30 +94,18 @@ public class Snake {
         n.moveCol(col, length2);
     }
     
-    private boolean collision(int[][] board, Node n) {
-        switch (board[n.getRow()][n.getCol()]) {
-            case 1:
-                return !collidesWithItSelf();
-            case 2:
-                incrementFood();
-                break;
-            case 3:
-                incrementSpecialFood();
-                break;
-            default:
-                break;
-        }
-        return true;
+    private boolean collision(Food food, Food specialFood) {
+        if (food != null && collidesWithFood(food.getPosition())) {incrementFood(food);}
+        if (specialFood != null && collidesWithFood(specialFood.getPosition())) {incrementFood(specialFood);}
+
+        return !collidesWithItSelf();
     }
     
-    private void incrementFood() {
+    private void incrementFood(Food food) {
         remainingNodesToCreate++;
-        score.incrementScore(1);
-    }
-    
-    private void incrementSpecialFood() {
-        remainingNodesToCreate += 4;
-        score.incrementScore(4);
+        if (food.isSpecial()) {score.incrementScore(4);} 
+        else {score.incrementScore(1);}
+        food.setFood(false);
     }
 
     public boolean isEat() {
@@ -127,6 +114,10 @@ public class Snake {
 
     public void setEat(boolean eat) {
         this.eat = eat;
+    }
+
+    public List<Node> getBody() {
+        return body;
     }
 
     public Direction getDirection() {
@@ -144,6 +135,11 @@ public class Snake {
                 if (body.get(i).getRow() == body.get(y).getRow() && body.get(i).getCol() == body.get(y).getCol()) {return true;}
             }
         }
+        return false;
+    }
+    
+    private boolean collidesWithFood(Node food) {
+        if (body.get(0).getRow() == food.getRow() && body.get(0).getCol() == food.getCol()) {return true;}
         return false;
     }
     

@@ -5,10 +5,10 @@ public class Game extends JFrame {
 
     static Board b;
     public Game() {
-        b = new Board(25, 25);
+        b = new Board();
         add(b);
         
-        setSize(642, 695);
+        setSize(665, 720);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
     

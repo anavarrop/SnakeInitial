@@ -3,28 +3,23 @@ import java.awt.Graphics2D;
 import java.util.List;
 
 public class Food {
-    private Node position;
-    private int[][] board;
-    private boolean special;
+    private final Node position;
+    private final boolean special;
     public int timerSpecialFood = 1;
     private boolean food;
 
-    public Food(List<Node> position, int[][] b, boolean special) { 
-        board = b;
+    public Food(List<Node> position, boolean special) { 
         this.special = special;
         this.position = position.get((int)(Math.random() * (position.size() - 1)));
-        
-        if (special) {
-            board[this.position.getRow()][this.position.getCol()] = 3;
-            food = false;
-        } else {
-            board[this.position.getRow()][this.position.getCol()] = 2;
-            food = true;
-        }
+        food = true;
     }
     
     public boolean isFood() {
         return food;
+    }
+
+    public boolean isSpecial() {
+        return special;
     }
 
     public void setFood(boolean food) {
@@ -32,15 +27,19 @@ public class Food {
     }
     
     public void desapear() {    
-        board[position.getRow()][position.getCol()] = 0;
         food = false;
     }
 
     public void setTimer(int timerSpecialFood) {
         this.timerSpecialFood = timerSpecialFood;
     }
+
+    public Node getPosition() {
+        return position;
+    }
     
     public void paint(Graphics2D g2d) {
+        if (!food) {return;}
         if (special) {Util.drawSquare(g2d, position.getRow(), position.getCol(), 25, 25, Color.green);}
         else {Util.drawSquare(g2d, position.getRow(), position.getCol(), 25, 25, Color.red);}
     }
