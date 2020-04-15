@@ -5,11 +5,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import jdk.nashorn.internal.objects.NativeArray;
 
 class MyRunnable implements Runnable {
 
@@ -183,24 +185,40 @@ public class Board extends JPanel implements ActionListener {
         timerSpecial.scheduleAtFixedRate(timerTaskSpecial, 0, 1000);
     }
      
+    private void stopTimers() {
+        timer.purge();
+        timerTask.cancel();
+        timerSpecial.purge();
+        timerTaskSpecial.cancel();
+    }
+     
     private List<Node> fill() {
         List<Node> list = new ArrayList<>();
         List<Node> filled = new ArrayList<>();
          
+        for (Node n : snake.getBody()) {
+            filled.add(n);
+        }
+        
         for (int i = 0; i <= SQUAREWIDTH; i++) {
             for (int y = 0; y <= SQUAREHEIGHT; y++) {
-                list.add(new Node(i, y));
+                Node n = new Node(i, y);
+                boolean si = true;
+                for (int z = 0; z < filled.size(); z++) {
+                    if (n.compareTo(filled.get(z)) == 0) {
+                        si = false;
+                        break;
+                    }
+                }
+                if (si) {
+                    list.add(n);
+                }
             }
         }
          
         if (food != null) {filled.add(food.getPosition());}
         if (specialFood != null) {filled.add(specialFood.getPosition());}
-        for (Node n : snake.getBody()) {
-            filled.add(n);
-        }
-         
-        list.removeAll(filled);
-         
+                   
         return list;
     }
     
@@ -211,13 +229,13 @@ public class Board extends JPanel implements ActionListener {
     
     public void pause() {
         pause = true;
-
         stopTimers();
                         
         switch (JOptionPane.showConfirmDialog(this, "¿Quiere reanudar la partida?", "PAUSA", JOptionPane.YES_NO_OPTION)) {
             case JOptionPane.YES_OPTION:
-                pause = false;
-                runnable.run();
+                myInit();
+                initComponents();
+                start();
                 break;
             default:
                 System.exit(0);
@@ -240,19 +258,13 @@ public class Board extends JPanel implements ActionListener {
         }
     }
     
-    private void stopTimers() {
-        timer.purge();
-        timerTask.cancel();
-        timerSpecial.purge();
-        timerTaskSpecial.cancel();
-    }
-    
     @Override 
     protected void paintComponent(Graphics g)  {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        
+
         lastDirection = snake.getDirection();
+
         snake.paint(g2d);
         if (food != null && food.isFood()) {food.paint(g2d);}//
         if (specialFood != null && specialFood.isFood()) {specialFood.paint(g2d);}
@@ -262,7 +274,6 @@ public class Board extends JPanel implements ActionListener {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        scoreBoard1 = new ScoreBoard();
         scoreBoard = new ScoreBoard();
 
         setBackground(new java.awt.Color(204, 255, 255));
@@ -271,7 +282,6 @@ public class Board extends JPanel implements ActionListener {
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private ScoreBoard scoreBoard;
-    private ScoreBoard scoreBoard1;
     // End of variables declaration//GEN-END:variables
 
     public Snake getSnake() {

@@ -1,4 +1,4 @@
-public class Node {
+public class Node implements Comparable<Node> {
     private Node next;
     private int row;
     private int col;
@@ -65,5 +65,21 @@ public class Node {
 
     public Node getNext() {
         return next;
+    }
+
+    @Override
+    public String toString() {
+        return "Row: " + row + " Col: " + col;
+    }
+
+    @Override
+    public int compareTo(Node n) {
+        if (row > n.getRow()) {return 1;} 
+        else if (row < n.getRow()) {return -1;} 
+        else {
+            if (col > n.getCol()) {return 1;} 
+            else if (col < n.getCol()) {return -1;}
+        }
+        return 0;
     }
 }
