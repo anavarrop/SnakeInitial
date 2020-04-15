@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -26,10 +25,10 @@ class MyRunnable implements Runnable {
     
     @Override
     public void run() {
-        while (true) {
-            try {Thread.sleep(Board.DeltaTime);} catch (InterruptedException ex) {}
+        System.err.println("Start");
+        while (!b.getPause()) {
+            try {Thread.sleep(Board.DELTATIME);} catch (InterruptedException ex) {}
             removeLastNodeIfIsNecessary();
-            
             switch(snake.getDirection()) {
                 case LEFT:
                     checkCollision(0, -1);
@@ -46,6 +45,7 @@ class MyRunnable implements Runnable {
             }
             b.repaint();
         }
+        System.err.println("Stop");
     }
     
     private void checkCollision(int incrementeRow, int incrementCol) {
@@ -90,6 +90,9 @@ public class Board extends JPanel implements ActionListener {
                 case KeyEvent.VK_DOWN: case KeyEvent.VK_S:
                     checkDirection(Direction.DOWN);
                     break;
+                case KeyEvent.VK_ESCAPE:
+                    pause = !pause;
+                    pause();
                 default:
                     break;
             }
@@ -115,10 +118,11 @@ public class Board extends JPanel implements ActionListener {
         }
     }
     
+    public static final int SQUAREWIDTH = 25;
+    public static final int SQUAREHEIGHT = 25;
     
-    
-    private int numRows;
-    private int numCols;
+    private final int NUMROWS;
+    private final int NUMCOLS;
     private int[][] board;
     
     private Snake snake;
@@ -127,7 +131,7 @@ public class Board extends JPanel implements ActionListener {
     private Food food;
     private Food specialFood;
     
-    public static int DeltaTime;
+    public static int DELTATIME = 200;
     private MyRunnable runnable;   
     
     private Timer timer;
@@ -137,31 +141,45 @@ public class Board extends JPanel implements ActionListener {
     private TimerTask timerTaskSpecial;
     
     private boolean firstTime;
+    private boolean pause;
     
+    
+    
+    public Board(int numRows, int numCols) {
+        this.NUMROWS = numRows;
+        this.NUMCOLS = numCols;
+        
+        initComponents();
+        myInit();
+    }
     
     private void myInit() {   
         firstTime = true;
+        pause = false;
         
         snake = new Snake(4,4,3, scoreBoard);
         lastDirection = snake.getDirection();
-        board = snake.create(numRows, numCols);
+        board = snake.create(NUMROWS, NUMCOLS);
         
         food = new Food(fill(), board, false);
         
         setFocusable(true);
         this.addKeyListener(new MyKeyAdapter());
-        
-        DeltaTime = 200;
-        runnable = new MyRunnable(this); 
+                
+        startTimers();
+    }
+    
+     private void startTimers() {                
         timer = new Timer();
         timerTask = new TimerTask() {
             public void run() {
-                if (!food.isHaveFood()) {            
+                if (!food.isFood()) {            
                     food = new Food(fill(), board, false);
                 }
             }
         };
         timer.scheduleAtFixedRate(timerTask, 0, 1000);
+        
         timerSpecial = new Timer();
         timerTaskSpecial = new TimerTask() {
             public void run() {
@@ -183,17 +201,20 @@ public class Board extends JPanel implements ActionListener {
         timerSpecial.scheduleAtFixedRate(timerTaskSpecial, 0, 1000);
     }
     
-    public Board(int numRows, int numCols) {
-        this.numRows = numRows;
-        this.numCols = numCols;
-        
-        initComponents();
-        myInit();
-    }
-    
     public void start() {
         runnable = new MyRunnable(this);
         runnable.run();
+    }
+    
+    public void pause() {
+        System.err.println("Pause: " + pause);
+        if (pause) {
+            stopTimers();
+        } else { //No funciona por motivos desconocidos
+            initComponents();
+            start();
+        }
+
     }
     
     private List<Node> fill() {
@@ -210,17 +231,14 @@ public class Board extends JPanel implements ActionListener {
     }
     
     public void gameOver() {
-        timer.purge();
-        timerTask.cancel();
-        timerSpecial.purge();
-        timerTaskSpecial.cancel();
+        stopTimers();
         
         JOptionPane jpane = new JOptionPane();
-        int a = jpane.showConfirmDialog(this, "¿Quiere hacer otra partida?", "PERDISTE", JOptionPane.INFORMATION_MESSAGE);
-        
-        switch (a) {
+                
+        switch (jpane.showConfirmDialog(this, "¿Quiere hacer otra partida?", "PERDISTE", JOptionPane.INFORMATION_MESSAGE)) {
             case JOptionPane.YES_OPTION:
                 myInit();
+                scoreBoard.setScore(0);
                 start();
                 break;
             default:
@@ -229,39 +247,45 @@ public class Board extends JPanel implements ActionListener {
         }
     }
     
+    private void stopTimers() {
+        timer.purge();
+        timerTask.cancel();
+        timerSpecial.purge();
+        timerTaskSpecial.cancel();
+    }
+    
     @Override 
     protected void paintComponent(Graphics g)  {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        paintSnake(g2d);
-    }
-    
-    private void paintSnake(Graphics2D g2d) {
+        
         lastDirection = snake.getDirection();
         
-        boolean haveFood = false;
-        boolean haveSpecialFood = false;
-        for (int x = 0; x < numRows; x++) {
-            for (int y = 0; y < numCols; y++) {
-                switch (board[x][y]) {
-                    case 1:
-                        Util.drawSquare(g2d, x, y, numRows, numCols, Color.yellow);
-                        break;
-                    case 2:
-                        haveFood = true;
-                        Util.drawSquare(g2d, x, y, numRows, numCols, Color.red);
-                        break;
-                    case 3:
-                        haveSpecialFood = true;
-                        Util.drawSquare(g2d, x, y, numRows, numCols, Color.green);
-                        break;
-                    default:
-                        break;
-                }
+        boolean haveFood = haveFood();
+        boolean haveSpecialFood = haveSpecialFood();
+        
+        snake.paint(g2d);
+        if (haveFood) {food.paint(g2d);}//
+        if (haveSpecialFood) {specialFood.paint(g2d);}
+    }
+    
+    private boolean haveFood() {
+        for (int x = 0; x < NUMROWS; x++) {
+            for (int y = 0; y < NUMCOLS; y++) {
+                if (board[x][y] == 2) {return true;}
             }
         }
-        if (!firstTime && !haveSpecialFood) {specialFood.setTimer(0);}
-        food.setHaveFood(haveFood);
+        food.setFood(false);
+        return false;
+    }
+    
+    private boolean haveSpecialFood() {
+        for (int x = 0; x < NUMROWS; x++) {
+            for (int y = 0; y < NUMCOLS; y++) {
+                if (board[x][y] == 3) {return true;}
+            }
+        }
+        return false;
     }
     
     @SuppressWarnings("unchecked")
@@ -283,19 +307,14 @@ public class Board extends JPanel implements ActionListener {
         return board;
     }
 
-    public Node getNode() {
-        return snake.getFirst();
-    }
-
     public Snake getSnake() {
         return snake;
     }
     
-    public Runnable getRunnable() {
-        return runnable;
+    public boolean getPause() {
+        return pause;
     }
     
     @Override
-    public void actionPerformed(ActionEvent ae) {
-    }
+    public void actionPerformed(ActionEvent ae) {}
 }

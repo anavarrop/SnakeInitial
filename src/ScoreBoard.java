@@ -16,6 +16,11 @@ public class ScoreBoard extends javax.swing.JPanel {
         lbl_score.setText(score+"");
     }
     
+    public void setScore(int score) {
+        this.score = score;
+        lbl_score.setText(score+"");
+    }
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {

@@ -1,3 +1,5 @@
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,38 +63,63 @@ public class Snake {
     }
    
     public void grew(int row, int col) {
-        Node node = new Node(row, col);
-        node.setNext(body.get(body.size() - 1));
-        body.add(node);
-        eat = true;
-        remainingNodesToCreate--;
+        if (remainingNodesToCreate > 0) {
+            Node node = new Node(row, col);
+            
+            node.setNext(body.get(body.size() - 1));
+            body.add(node);
+            
+            remainingNodesToCreate--;
+            eat = true;
+        }
     }
     
     public boolean move(int row, int col, int[][] board) {
         for (int i = body.size() - 1; i >= 0; i--) {
             Node n = body.get(i);
             if (n.getNext()== null) {
-                n.moveRow(row, board.length - 1);
-                n.moveCol(col, board[0].length - 1);
-                
-                if (board[n.getRow()][n.getCol()] == 2) {
-                    remainingNodesToCreate++;
-                    score.incrementScore(1);
-                } else if (board[n.getRow()][n.getCol()] == 3) {
-                    remainingNodesToCreate += 4;
-                    score.incrementScore(4);
-                }
-                
-                if (remainingNodesToCreate > 0) {
-                    grew(row, col);
-                }
+                moveNode(n, row, col, board.length - 1, board[0].length - 1);
+                if (!collision(board, n)) {return false;}
+                grew(n.getRow(), n.getCol());
                 board[n.getRow()][n.getCol()] = 1;
+                
             } else {
                 n.moveToNext();
             }
         }
         return true;
     }    
+    
+    private void moveNode(Node n, int row, int col, int length1, int length2) {
+        n.moveRow(row, length1);
+        n.moveCol(col, length2);
+    }
+    
+    private boolean collision(int[][] board, Node n) {
+        switch (board[n.getRow()][n.getCol()]) {
+            case 1:
+                return !collidesWithItSelf();
+            case 2:
+                incrementFood();
+                break;
+            case 3:
+                incrementSpecialFood();
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+    
+    private void incrementFood() {
+        remainingNodesToCreate++;
+        score.incrementScore(1);
+    }
+    
+    private void incrementSpecialFood() {
+        remainingNodesToCreate += 4;
+        score.incrementScore(4);
+    }
 
     public boolean isEat() {
         return eat;
@@ -108,5 +135,21 @@ public class Snake {
 
     public void setDirection(Direction direction) {
         this.direction = direction;
+    }
+    
+    private boolean collidesWithItSelf() {
+        for (int i = 0; i < body.size(); i++) {
+            for (int y = 0; y < body.size(); y++) {
+                if (i == y) {continue;}
+                if (body.get(i).getRow() == body.get(y).getRow() && body.get(i).getCol() == body.get(y).getCol()) {return true;}
+            }
+        }
+        return false;
+    }
+    
+    public void paint(Graphics2D g2d) {
+        for (Node n : body) {
+            Util.drawSquare(g2d, n.getRow(), n.getCol(), Board.SQUAREWIDTH, Board.SQUAREHEIGHT, Color.yellow);
+        }
     }
 }
