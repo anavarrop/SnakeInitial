@@ -13,9 +13,9 @@ import javax.swing.JPanel;
 
 class MyRunnable implements Runnable {
 
-    private int[][] board;
-    private Snake snake;
-    private Board b;
+    private final int[][] board;
+    private final Snake snake;
+    private final Board b;
     
     public MyRunnable(Board b) {
         this.b = b;
@@ -24,6 +24,7 @@ class MyRunnable implements Runnable {
     }
     
     @Override
+    @SuppressWarnings("SleepWhileInLoop")
     public void run() {
         System.err.println("Start");
         while (!b.getPause()) {
@@ -66,6 +67,7 @@ class MyRunnable implements Runnable {
         board[snake.getLastRow()][snake.getLastCol()] = 0;
     }
     
+    @SuppressWarnings("FinalizeCalledExplicitly")
     private void gameOver() {
         try {finalize();} catch (Throwable ex) {}
         b.gameOver();
@@ -172,6 +174,7 @@ public class Board extends JPanel implements ActionListener {
      private void startTimers() {                
         timer = new Timer();
         timerTask = new TimerTask() {
+            @Override
             public void run() {
                 if (!food.isFood()) {            
                     food = new Food(fill(), board, false);
@@ -182,6 +185,7 @@ public class Board extends JPanel implements ActionListener {
         
         timerSpecial = new Timer();
         timerTaskSpecial = new TimerTask() {
+            @Override
             public void run() {
                 if (firstTime || specialFood.timerSpecialFood == 0) {
                     int r = (int)(Math.random() * (100 - 1) + 1);
@@ -232,10 +236,8 @@ public class Board extends JPanel implements ActionListener {
     
     public void gameOver() {
         stopTimers();
-        
-        JOptionPane jpane = new JOptionPane();
-                
-        switch (jpane.showConfirmDialog(this, "¿Quiere hacer otra partida?", "PERDISTE", JOptionPane.INFORMATION_MESSAGE)) {
+                        
+        switch (JOptionPane.showConfirmDialog(this, "¿Quiere hacer otra partida?", "PERDISTE", JOptionPane.INFORMATION_MESSAGE)) {
             case JOptionPane.YES_OPTION:
                 myInit();
                 scoreBoard.setScore(0);
